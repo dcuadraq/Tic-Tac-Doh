@@ -10,8 +10,8 @@ Gem::Specification.new do |spec|
   spec.email         = ["dcuadraq@gmail.com"]
 
   spec.summary       = %q{Gem for playing Tic Tac Toe.}
-  # spec.description   = %q{TODO: Write a longer description or delete this line.}
-  spec.homepage      = "TODO: Put your gem's website or public repo URL here."
+  spec.description   = %q{Sizeable tic tac toe game.}
+  spec.homepage      = "https://github.com/dcuadraq/tic_tac_doh"
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.bindir        = "exe"
