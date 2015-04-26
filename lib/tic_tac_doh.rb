@@ -6,16 +6,24 @@ module TicTacDoh
     # Previous winner starts new game
     #   or which turn would have followed if draw
 
-    attr_reader :players, :grid, :turn
-    attr_accessor :players
+    attr_reader :players, :grid
+    # attr_accessor :players
 
     def initialize(args={})
       @players = []
-      @turn = 1
+      @turn = 0
       # @players << args[:player1] << args[:player2]
       args.fetch(:board_size, 3).times do
         @grid = Array.new(3) {}
       end
+    end
+
+    def next_turn
+      binding.pry
+    end
+
+    def who_is_next
+      { nickname: players[@turn].nickname, mark: players[@turn].mark }
     end
 
     def set_board_size(size)
@@ -27,13 +35,13 @@ module TicTacDoh
       # puts players.count
       prepare_grid
       player_turn ||= 0
-      until game_over
+      until game_over?
         clear_screen
         print_grid
         # puts "turn: #{@turn}"
         turn(players[player_turn])
         player_turn = player_turn == (players.count - 1) ? 0 : player_turn + 1
-        @turn = @turn + 1 unless game_over
+        @turn = @turn + 1 unless game_over?
       end
       clear_screen
       print_grid
@@ -41,9 +49,9 @@ module TicTacDoh
       # puts @turn
     end
 
-    def add_player(mark)
-      if game_over && valid_mark
-        players << Player.new(mark: mark)
+    def add_player(args)
+      if valid_mark(args[:mark])
+        players << Player.new(args)
         true
       else
         false
@@ -55,7 +63,7 @@ module TicTacDoh
     def valid_mark(mark)
       players.each do |player|
         if player.mark == mark[0]
-          false
+          return false
         end
       end
       true
@@ -73,7 +81,7 @@ module TicTacDoh
       end
     end
 
-    def game_over
+    def game_over?
       # Winner
       if symbol_winner?
         return true
@@ -84,9 +92,13 @@ module TicTacDoh
           return false if cell.is_a? Numeric
         end
       end
-      clear_screen
-      print_grid
+      # clear_screen
+      # print_grid
       true
+    end
+
+    def mid_game?
+      
     end
 
     def symbol_winner?
