@@ -1,4 +1,4 @@
-require "tic_tac_doh/version"
+require 'tic_tac_doh/version'
 
 module TicTacDoh
   class Game
@@ -7,20 +7,25 @@ module TicTacDoh
     #   or which turn would have followed if draw
 
     attr_reader :players, :grid, :turn
+    attr_accessor :players
 
     def initialize(args={})
       @players = []
       @turn = 1
-      @players << args[:player1] << args[:player2]
-      args.fetch(:size, 3).times do
+      # @players << args[:player1] << args[:player2]
+      args.fetch(:board_size, 3).times do
         @grid = Array.new(3) {}
       end
+    end
+
+    def set_board_size(size)
+      prepare_grid(size)
     end
 
     def play
       # puts grid.length
       # puts players.count
-      prepare_grid()
+      prepare_grid
       player_turn ||= 0
       until game_over
         clear_screen
@@ -36,7 +41,25 @@ module TicTacDoh
       # puts @turn
     end
 
+    def add_player(mark)
+      if game_over && valid_mark
+        players << Player.new(mark: mark)
+        true
+      else
+        false
+      end
+    end
+
     private
+
+    def valid_mark(mark)
+      players.each |player| do
+        if player.mark == mark[0]
+          false
+        end
+      end
+      true
+    end
 
     def prepare_grid(size=grid.length)
       @grid = []
@@ -117,7 +140,7 @@ module TicTacDoh
     end
 
     def clear_screen
-      system 'clear' or system 'cls'
+      # system 'clear' or system 'cls'
     end
 
     def calculate_cell(cell_number)
@@ -153,7 +176,7 @@ module TicTacDoh
   end
 
   class Player
-    attr_reader :nickname, :score, :mark
+    attr_reader :nickname, :score
 
     def initialize(args={})
       @nickname = args.fetch(:nickname, "Anonymous#{rand(100)}")
@@ -169,6 +192,10 @@ module TicTacDoh
 
     def add_to_score(score)
       @score += score
+    end
+
+    def mark
+      @mark[0]
     end
   end
 end
