@@ -53,7 +53,7 @@ module TicTacDoh
     private
 
     def valid_mark(mark)
-      players.each |player| do
+      players.each do |player|
         if player.mark == mark[0]
           false
         end
