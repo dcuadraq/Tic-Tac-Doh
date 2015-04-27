@@ -7,23 +7,30 @@ module TicTacDoh
     #   or which turn would have followed if draw
 
     attr_reader :players, :grid
-    # attr_accessor :players
 
     def initialize(args={})
       @players = []
       @turn = 0
-      # @players << args[:player1] << args[:player2]
       args.fetch(:board_size, 3).times do
         @grid = Array.new(3) {}
       end
     end
 
-    def next_turn
-      binding.pry
+    def new
+      prepare_grid
+      @turn = 0
+    end
+
+    def next_turn(cell_position)
+      insert_player_move_in_grid(calculate_cell(cell_position))
     end
 
     def who_is_next
-      { nickname: players[@turn].nickname, mark: players[@turn].mark }
+      { nickname: players[player_turn].nickname, mark: players[player_turn].mark }
+    end
+
+    def player_turn
+      @turn % players.count
     end
 
     def set_board_size(size)
@@ -31,14 +38,11 @@ module TicTacDoh
     end
 
     def play
-      # puts grid.length
-      # puts players.count
       prepare_grid
       player_turn ||= 0
       until game_over?
         clear_screen
         print_grid
-        # puts "turn: #{@turn}"
         turn(players[player_turn])
         player_turn = player_turn == (players.count - 1) ? 0 : player_turn + 1
         @turn = @turn + 1 unless game_over?
@@ -46,7 +50,6 @@ module TicTacDoh
       clear_screen
       print_grid
       puts  "Game Over"
-      # puts @turn
     end
 
     def add_player(args)
@@ -56,6 +59,25 @@ module TicTacDoh
       else
         false
       end
+    end
+
+    def game_over?
+      # Winner
+      if symbol_winner?
+        return true
+      end
+      # No more free cells
+      @grid.each do |row|
+        row.each do |cell|
+          return false if cell.is_a? Numeric
+        end
+      end
+      true
+    end
+
+    def winner
+      return find_player_by(mark: symbol_winner?) if symbol_winner?
+      false
     end
 
     private
@@ -81,26 +103,6 @@ module TicTacDoh
       end
     end
 
-    def game_over?
-      # Winner
-      if symbol_winner?
-        return true
-      end
-      # No more free cells
-      @grid.each do |row|
-        row.each do |cell|
-          return false if cell.is_a? Numeric
-        end
-      end
-      # clear_screen
-      # print_grid
-      true
-    end
-
-    def mid_game?
-      
-    end
-
     def symbol_winner?
       winner_mark = nil
       grid.length.times do |n|
@@ -114,8 +116,13 @@ module TicTacDoh
       return winner_mark
     end
 
+    def find_player_by(args={})
+      players.each { |player| return { nickname: player.nickname, mark: player.mark } if player.mark == args[:mark] }
+      return false
+    end
+
     def secuential_mark(mark, row, col, row_step, col_step, counter=1)
-      return nil unless in_range?(row, col)
+      return nil unless within_grid_range?(row, col)
       if grid[row][col] == mark
         return grid[row][col] if counter == 3
         return secuential_mark(mark, row + row_step, col + col_step, row_step, col_step, counter+1)
@@ -124,7 +131,7 @@ module TicTacDoh
       end
     end
 
-    def in_range? (arg, col)
+    def within_grid_range? (arg, col)
       if arg.is_a? Hash
         return true if arg[:row] < grid.length && arg[:col] < grid.length if arg[:row] >= 0 && arg[:col] >= 0
       else
@@ -164,15 +171,16 @@ module TicTacDoh
       {row: row, column: column}
     end
 
-    def insert_player_move_in_grid(position, mark)
+    def insert_player_move_in_grid(position)
       return false unless valid_move? position
-      @grid[position[:row]][position[:column]] = mark
+      @grid[position[:row]][position[:column]] = who_is_next[:mark]
+      @turn += 1
       true
     end
 
     def valid_move?(position)
-      return false if position[:row] < 0 || position[:row] > (@grid.length) -1
-      return false if position[:column] < 0 || position[:column] > (@grid.length) -1
+      return false if position[:row] < 0 || position[:row] > (@grid.length) - 1
+      return false if position[:column] < 0 || position[:column] > (@grid.length) - 1
       return false unless @grid[position[:row]][position[:column]].is_a? Numeric
       true
 
