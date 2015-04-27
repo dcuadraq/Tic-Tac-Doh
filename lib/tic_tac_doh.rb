@@ -2,9 +2,6 @@ require 'tic_tac_doh/version'
 
 module TicTacDoh
   class Game
-    # X starts
-    # Previous winner starts new game
-    #   or which turn would have followed if draw
 
     attr_reader :players, :grid
 
@@ -16,9 +13,9 @@ module TicTacDoh
       end
     end
 
-    def new
+    def reset
       prepare_grid
-      @turn = 0
+      @turn = rand(0..players.count)
     end
 
     def next_turn(cell_position)
@@ -37,19 +34,12 @@ module TicTacDoh
       prepare_grid(size)
     end
 
-    def play
-      prepare_grid
-      player_turn ||= 0
-      until game_over?
-        clear_screen
-        print_grid
-        turn(players[player_turn])
-        player_turn = player_turn == (players.count - 1) ? 0 : player_turn + 1
-        @turn = @turn + 1 unless game_over?
+    def scoreboard
+      scoreboard = []
+      players.each do |player|
+        scoreboard << { nickname: player.nickname, score: player.score }
       end
-      clear_screen
-      print_grid
-      puts  "Game Over"
+      scoreboard
     end
 
     def add_player(args)
@@ -66,7 +56,11 @@ module TicTacDoh
       if symbol_winner?
         return true
       end
-      # No more free cells
+      return false unless free_cells?
+      true
+    end
+
+    def free_cells?
       @grid.each do |row|
         row.each do |cell|
           return false if cell.is_a? Numeric
@@ -118,7 +112,7 @@ module TicTacDoh
 
     def find_player_by(args={})
       players.each { |player| return { nickname: player.nickname, mark: player.mark } if player.mark == args[:mark] }
-      return false
+      false
     end
 
     def secuential_mark(mark, row, col, row_step, col_step, counter=1)
@@ -138,28 +132,6 @@ module TicTacDoh
         return true if arg < grid.length && col < grid.length if arg >= 0 && col >= 0
       end
       false
-    end
-
-    def print_grid
-      grid.each do |row|
-        puts row.join('|')
-      end
-    end
-
-    def turn(player)
-      player_action player
-    end
-
-    def player_action (player)
-      valid_move = false
-      until valid_move == true do
-        position = calculate_cell(player_move player)
-        valid_move = insert_player_move_in_grid(position, player_mark(player))
-      end
-    end
-
-    def clear_screen
-      # system 'clear' or system 'cls'
     end
 
     def calculate_cell(cell_number)
@@ -183,15 +155,6 @@ module TicTacDoh
       return false if position[:column] < 0 || position[:column] > (@grid.length) - 1
       return false unless @grid[position[:row]][position[:column]].is_a? Numeric
       true
-
-    end
-
-    def player_move(player)
-      player.move()
-    end
-
-    def player_mark(player)
-      player.mark
     end
   end
 
@@ -202,12 +165,6 @@ module TicTacDoh
       @nickname = args.fetch(:nickname, "Anonymous#{rand(100)}")
       @score = 0
       @mark = args[:mark]
-    end
-
-    def move()
-      puts "#{self.mark} turn "
-      puts "Pick a position"
-      gets.chomp.to_i
     end
 
     def add_to_score(score)
